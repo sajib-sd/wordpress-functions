@@ -1,0 +1,122 @@
+//=============================== Custom Post Type ===============================//	
+<?php
+
+
+
+function nyheter_post_type_register() {
+    $labels = array(
+        'name'                  => _x( 'Siste Nyheter', 'Post type general name', 'nyg-enfold-child' ),
+        'singular_name'         => _x( 'Siste Nyheters', 'Post type singular name', 'nyg-enfold-child' ),
+        'menu_name'             => _x( 'Siste Nyheter', 'Admin Menu text', 'nyg-enfold-child' ),
+        'name_admin_bar'        => _x( 'Siste Nyheter', 'Add New on Toolbar', 'nyg-enfold-child' ),
+        'add_new'               => __( 'Add New', 'nyg-enfold-child' ),
+        'add_new_item'          => __( 'Add New Nyheter', 'nyg-enfold-child' ),
+        'new_item'              => __( 'New Nyheter', 'nyg-enfold-child' ),
+        'edit_item'             => __( 'Edit Nyheter', 'nyg-enfold-child' ),
+        'view_item'             => __( 'View Nyheter', 'nyg-enfold-child' ),
+        'featured_image'        => _x( 'Nyheter Cover Image', 'nyg-enfold-child' ),
+        'set_featured_image'    => _x( 'Set cover image', 'nyg-enfold-child' ),
+        'remove_featured_image' => _x( 'Remove cover image', 'nyg-enfold-child' ),
+        'use_featured_image'    => _x( 'Use as cover image', 'nyg-enfold-child' ),
+        'archives'              => _x( 'Nyheter archives', 'nyg-enfold-child' ),
+    );     
+    $args = array(
+        'labels'             => $labels,
+        'description'        => 'Nyheter custom post type.',
+        'public'             => true,
+        'publicly_queryable' => true,
+        'show_ui'            => true,
+        'show_in_menu'       => true,
+        'rewrite'            => array( 'slug' => 'siste-nyheter' ),
+        'capability_type'    => 'post',
+        'has_archive'        => true,
+        'hierarchical'       => true,
+        'menu_position'      => 20,
+        'supports'           => array( 'title', 'editor', 'author', 'revisions', 'excerpt', 'thumbnail' ),
+        'taxonomies'         => array( 'category', 'post_tag' ),
+    );
+      
+    register_post_type( 'siste_nyheter', $args );
+}
+add_action( 'init', 'nyheter_post_type_register' );
+
+
+
+
+function nyheter_post_type_query(){
+	ob_start();
+
+$args = array(
+	'post_type' => 'siste_nyheter',
+	'post_status' => 'publish',
+	'posts_per_page' => 6,
+	'order' => 'desc',
+	'orderby' => 'date',
+	'paged' => get_query_var('paged') ? get_query_var('paged') : 1,
+);
+$query = new wp_query($args);
+echo '<div class="nyheter-post-main">';
+	echo '<div class="nyheter-post-row">';
+while( $query->have_posts() ) : $query->the_post();
+?>
+<div class="nyheter-post-column">
+	<div class="nyheter-image"><a href="<?php echo get_the_permalink(); ?>"><?php
+		if( has_post_thumbnail() ){
+			echo the_post_thumbnail();
+		}	
+		?></a></div>
+	<div class="nyheter-title">
+		<a href="<?php echo get_the_permalink(); ?>"><?php echo the_title(); ?></a>
+	</div>
+	<div class="nyheter-excerpt">
+	<?php echo the_excerpt(); ?>
+	</div>
+	<div class="nyheter-date-btn">
+		
+		<p><?php echo get_the_date(); ?></p>
+		<a href="<?php echo get_the_permalink(); ?>">Les mer</a>
+	</div>
+
+</div>
+<?php	
+endwhile;
+echo '</div>';
+
+//=============================== Pagination Add  ===============================//	
+	
+echo '<div class="nyheter-pagination">';
+$big = 999999999; // need an unlikely integer
+ 	echo paginate_links( array(
+    'base' => str_replace( $big, '%#%', get_pagenum_link( $big ) ),
+    'format' => '?paged=%#%',
+    'current' => max( 1, get_query_var('paged') ),
+    'total' => $query->max_num_pages,
+	'type' => 'list'	
+) );
+	
+	
+echo '</div>';
+	
+	echo '</div>';	
+	wp_reset_postdata();
+	return ob_get_clean();
+}
+add_shortcode("nyheter_post_shortcode", "nyheter_post_type_query");
+
+
+//=============================== Permition the post single page  ===============================//
+
+function avf_alb_supported_post_types_mod_nyheter( array $supported_post_types )
+{
+  $supported_post_types[] = 'siste_nyheter';
+  return $supported_post_types;
+}
+add_filter('avf_alb_supported_post_types', 'avf_alb_supported_post_types_mod_nyheter', 10, 1);
+
+
+function avf_metabox_layout_post_types_mod_nyheter( array $supported_post_types )
+{
+ $supported_post_types[] = 'siste_nyheter';
+ return $supported_post_types;
+}
+add_filter('avf_metabox_layout_post_types', 'avf_metabox_layout_post_types_mod_nyheter', 10, 1);
